@@ -1,0 +1,37 @@
+{
+	"schemaVersion": 1,
+	"id": "quake",
+	"version": "1",
+	"name": "Quake Movement",
+	"description": "hurrr",
+	"authors": ["poopbarrel"],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://craftocracy.toasteroven.xyz/"
+	},
+
+	"license": "MIT",
+	"icon": "assets/quake/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["com.quake.QuakeServer"],
+		"client": ["com.quake.QuakeClient"]
+	},
+	"accessWidener": "quake-common.accesswidener",
+	"mixins": [
+		"quake.mixins.json",
+		{
+			"config": "quake.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.15.10",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

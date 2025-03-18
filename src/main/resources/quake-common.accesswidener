@@ -1,0 +1,13 @@
+accessWidener v2 named
+
+extendable method net/minecraft/entity/Entity adjustMovementForSneaking (Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/entity/MovementType;)Lnet/minecraft/util/math/Vec3d;
+extendable method net/minecraft/entity/Entity pushOutOfBlocks (DDD)V
+extendable method net/minecraft/entity/Entity adjustMovementForCollisions (Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;
+
+extendable class net/minecraft/entity/Entity
+extendable class net/minecraft/entity/LivingEntity
+
+extendable class net/minecraft/entity/player/PlayerEntity
+extendable class net/minecraft/entity/projectile/PersistentProjectileEntity
+extendable method net/minecraft/entity/Entity getLerpedPos (F)Lnet/minecraft/util/math/Vec3d;
+extendable method net/minecraft/entity/Entity getCameraPosVec (F)Lnet/minecraft/util/math/Vec3d;
