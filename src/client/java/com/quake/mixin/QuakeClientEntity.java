@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.spongepowered.asm.mixin.Mixin;
-import java.util.function.Predicate;
 import com.mojang.authlib.GameProfile;
 import com.quake.QuakeCollider;
 
@@ -210,6 +209,47 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 		this.setVelocity(velocity);
 	}
 
+	private void quakeTickBoost() {
+		// Allows entity boosting to occur
+		final Box playerBox = this.getBoundingBox();
+		final double minY = playerBox.minY + 0.2;
+		final Vec3d center = playerBox.getCenter();
+        final List<Entity> list = this
+			.getWorld()
+			.getOtherEntities(this, playerBox.expand(0.01), ((hit) -> {
+				return true;
+			}));
+
+		// Apply player inertia if possible lol
+		double bestDifference = 0.333;
+		int bestIndex = -1;
+
+		inertia = Vec3d.ZERO;
+		for(int i = 0; i < list.size(); i++) {
+			final Box currentBox = list.get(i).getBoundingBox();
+			final double difference = minY - currentBox.maxY;
+			if(difference >= 0.0 && difference < bestDifference) {
+				// We can boost from the entity.
+				bestDifference = difference;
+				bestIndex = i;
+			}
+		}
+
+		if(bestIndex != -1) {
+			// Set inertia
+			final Entity ent = list.get(bestIndex);
+			final Box currentBox = ent.getBoundingBox();
+			this.setPos(center.x, currentBox.maxY + 0.001, center.z);
+			this.setOnGround(true);
+
+			inertia = new Vec3d(
+				(ent.getX() - ent.prevX), 
+				(ent.getY() - ent.prevY), 
+				(ent.getZ() - ent.prevZ)
+			);
+		}
+	}
+
 	private void quakeTickMovement() {
 		if(this.getAbilities().allowFlying 
 			&& !this.isGrounded
@@ -225,32 +265,8 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 			previousJumpTick = jumpTick;
 		}
 
-		// Apply player inertia if possible lol
-		final Box playerBox = this.getBoundingBox();
-        List<Entity> list = this.getWorld().getOtherEntities(this, playerBox.expand(0.5), (Predicate<Entity>)((hit) -> {
-			return true;
-		}));
-
-		final double minY = playerBox.minY + 0.2;
-		final Vec3d center = playerBox.getCenter();
-
-		inertia = Vec3d.ZERO;
-		for(Entity ent: list) {
-			final Box currentBox = ent.getBoundingBox();
-			if(currentBox.maxY < minY) {
-				// We can boost from the entity.
-				this.setPos(center.x, currentBox.maxY + 0.001, center.z);
-				this.setOnGround(true);
-
-				inertia = new Vec3d(
-					(ent.getX() - ent.prevX), 
-					(ent.getY() - ent.prevY), 
-					(ent.getZ() - ent.prevZ)
-				);
-			}
-		}
-		
 		wasJumping = this.jumping;
+		quakeTickBoost();
 	}
 
 	@Override
@@ -290,7 +306,7 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 			this.setVelocity(quakeMoveFly(flyDirection, this.getVelocity()));
 		} else if(this.isClimbing() && previousLadderUpdate < tick) {
 			// Player is climbing
-			final double y = -Math.max(Math.min(Math.sin(pitch * RAD), 1.0), -1.0) * input.z;
+			final double y = -Math.sin(pitch * RAD) * input.z;
 			if(this.jumping) {
 				// Jumping off a ladder
 				Vec3d normal = QuakeCollider.quakeGetWall(this, input);

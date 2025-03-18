@@ -7,11 +7,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
 import net.minecraft.entity.Entity;
 
+// Mostly because I might add continuous collision in the future
 @SuppressWarnings("unused")
 public class QuakeCollider {    
     private static final Vec3d X_NEG = new Vec3d(-1.0, 0.0, 0.0);
@@ -21,9 +21,6 @@ public class QuakeCollider {
     private static final Vec3d X_POS = new Vec3d(1.0, 0.0, 0.0);
     private static final Vec3d Y_POS = new Vec3d(0.0, 1.0, 0.0);
     private static final Vec3d Z_POS = new Vec3d(0.0, 0.0, 1.0);
-
-    private static final Vec3d ONE = new Vec3d(1.0, 1.0, 1.0);
-    private static final Vec3d XZ = new Vec3d(1.0, 0.0, 1.0);
 
     private static final Vec3d[] STEPS = new Vec3d[] {
         new Vec3d(1.0, 0.0, 1.0),
@@ -37,11 +34,6 @@ public class QuakeCollider {
     private static class AABB {
         public Vec3d min;
         public Vec3d max;
-    };
-
-    private static class SneakContact {
-        public Vec3d normal;
-        public double t;
     };
 
     private static class DiscreteContact { 
@@ -109,14 +101,6 @@ public class QuakeCollider {
         return p.subtract(n.multiply(lambda));
     }
 
-    private static BlockPos getBlockPosition(Vec3d position) {
-        return new BlockPos(
-            (int)Math.floor(position.x),
-            (int)Math.floor(position.y),
-            (int)Math.floor(position.z)
-        );
-    }
-
     private static void generateDiscreteContact(
         final AABB box,
         final Vec3d halfSize,
@@ -159,7 +143,6 @@ public class QuakeCollider {
         final Vec3d wishDir
     ) {
         final Box box = entity.getBoundingBox();
-        final Vec3d halfSize = new Vec3d((box.maxX - box.minX) * 0.5, (box.maxY - box.minY) * 0.5, (box.maxZ - box.minZ) * 0.5);
         final Iterator<VoxelShape> list = entity
             .getWorld()
             .getBlockCollisions(entity, box.expand(1.0))
@@ -196,7 +179,6 @@ public class QuakeCollider {
         final Entity entity
     ) {
         // Fields
-        final double stepHeight = entity.getStepHeight();
         final Box box = entity.getBoundingBox();
         final Vec3d center = box.getCenter();
 

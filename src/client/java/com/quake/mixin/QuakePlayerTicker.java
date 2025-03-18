@@ -11,7 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = MinecraftClient.class, priority = Integer.MAX_VALUE)
 public abstract class QuakePlayerTicker {
-    // Allows the client to update our player movement at 128 tick
+    // This logic updates our player at a higher tickrate. Kind of a hack,
+    // but this is the most reliable way of handling this.
     @Shadow public ClientPlayerEntity player;
     @Inject(at = @At("HEAD"), method = "render")
     private void render(boolean tick, CallbackInfo ci) {
