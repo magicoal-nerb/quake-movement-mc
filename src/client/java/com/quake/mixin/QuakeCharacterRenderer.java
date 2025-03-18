@@ -12,13 +12,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
-@SuppressWarnings("non-Javadoc")
 @Mixin(value = WorldRenderer.class, priority = Integer.MAX_VALUE)
 public abstract class QuakeCharacterRenderer {
-    @Shadow 
+    @Shadow
     @Final
     private EntityRenderDispatcher entityRenderDispatcher;
-    
+
     /**
      * renderEntity
      * @author magical
@@ -33,25 +32,25 @@ public abstract class QuakeCharacterRenderer {
      */
     @Overwrite
     private void renderEntity(
-        Entity entity, 
-        double cameraX, 
+        Entity entity,
+        double cameraX,
         double cameraY,
-        double cameraZ, 
-        float tickDelta, 
-        MatrixStack matrices, 
+        double cameraZ,
+        float tickDelta,
+        MatrixStack matrices,
         VertexConsumerProvider vertexConsumers
     ) {
         Vec3d lerped = entity.getLerpedPos(tickDelta);
         float g = MathHelper.lerp(tickDelta, entity.prevYaw, entity.getYaw());
         this.entityRenderDispatcher.render(
-            entity, 
-            lerped.x - cameraX, 
-            lerped.y - cameraY, 
-            lerped.z - cameraZ, 
-            g, 
-            tickDelta, 
-            matrices, 
-            vertexConsumers, 
+            entity,
+            lerped.x - cameraX,
+            lerped.y - cameraY,
+            lerped.z - cameraZ,
+            g,
+            tickDelta,
+            matrices,
+            vertexConsumers,
             this.entityRenderDispatcher.getLight(entity, tickDelta)
         );
     }

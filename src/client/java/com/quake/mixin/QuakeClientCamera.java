@@ -14,7 +14,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 
 @Mixin(value = Camera.class, priority = Integer.MAX_VALUE)
-public abstract class QuakeClientCamera {    
+public abstract class QuakeClientCamera {
 	@Shadow private Entity focusedEntity;
     @Shadow protected void setRotation(float x, float y) { }
     @Shadow protected void setPos(Vec3d pos) { }
@@ -28,18 +28,18 @@ public abstract class QuakeClientCamera {
 
     @Inject(at = @At("TAIL"), method = "update")
     public void update(
-        BlockView area, 
-        Entity focusedEntity, 
-        boolean thirdPerson, 
-        boolean inverseView, 
+        BlockView area,
+        Entity focusedEntity,
+        boolean thirdPerson,
+        boolean inverseView,
         float tickDelta,
         CallbackInfo inf
     ) {
-        // Apply the newly interpolated position of our entity
-        // instead.
+		// Apply the newly interpolated position of our entity
+    	// instead.
         this.setRotation(focusedEntity.getYaw(tickDelta), focusedEntity.getPitch(tickDelta));
         this.setPos(focusedEntity.getCameraPosVec(tickDelta));
-        
+
 		if (thirdPerson) {
 			if (inverseView) {
 				this.setRotation(this.yaw + 180.0F, -this.pitch);
@@ -51,5 +51,5 @@ public abstract class QuakeClientCamera {
 			this.setRotation(direction != null ? direction.asRotation() - 180.0F : 0.0F, 0.0F);
 			this.moveBy(0.0, 0.3, 0.0);
 		}
-    }
+	}
 }

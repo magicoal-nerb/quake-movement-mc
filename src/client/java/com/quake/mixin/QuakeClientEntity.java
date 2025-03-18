@@ -19,13 +19,13 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 
 @Mixin(value = ClientPlayerEntity.class, priority = 1)
-public abstract class QuakeClientEntity extends PlayerEntity {	
+public abstract class QuakeClientEntity extends PlayerEntity {
 	private static final float INV_NANOSECOND = 1.0f / 1000000000.0f;
 	private static final float RAD = 0.01745f;
 
 	private static final Vec3d GRAVITY = new Vec3d(0.0, -0.05, 0.0);
 	private static final Vec3d XZ = new Vec3d(1.0, 0.0, 1.0);
-	
+
 	private long previousLadderUpdate = System.nanoTime();
 	private long previousQuakeUpdate = System.nanoTime();
 	private long previousJumpTick = System.currentTimeMillis();
@@ -40,9 +40,9 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 	public QuakeClientEntity(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
 		super(world, pos, yaw, gameProfile);
 	}
-	
+
 	private static final Vec3d quakeGetWishDirection(
-		final Vec3d input, 
+		final Vec3d input,
 		final float yaw
 	) {
 		/**
@@ -55,24 +55,24 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 			final float cos = MathHelper.cos(yaw);
 			final float sin = MathHelper.sin(yaw);
 			return new Vec3d(
-				input.x * cos - input.z * sin, 
-				0, 
+				input.x * cos - input.z * sin,
+				0,
 				sin * input.x + cos * input.z
 			).normalize();
 		} else {
 			return Vec3d.ZERO;
 		}
 	}
-	
+
 	private static final Vec3d quakeGetWishDirection(
-		final Vec3d input, 
-		final float yaw, 
+		final Vec3d input,
+		final float yaw,
 		final float pitch
 	) {
 		/**
 		 	Spherical coordinates:
 			forward = [sin(yaw)cos(pitch), sin(pitch), sin(yaw)cos(pitch)]
-			right = [sin(yaw+pi/2), 0, cos(yaw+pi/2)] => 
+			right = [sin(yaw+pi/2), 0, cos(yaw+pi/2)] =>
 				sin(yaw)cos(pi/2) + sin(pi/2)cos(yaw) -> cos(yaw)
 				cos(yaw)sin(pi/2) - cos(pi/2)sin(yaw) -> -sin(yaw)
 
@@ -94,9 +94,9 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 	}
 
 	private final Vec3d quakeAccelerate(
-		final Vec3d input, 
-		final Vec3d velocity, 
-		final float accelerate, 
+		final Vec3d input,
+		final Vec3d velocity,
+		final float accelerate,
 		final float maxVelocity
 	) {
 		// Constrain min(v.(i + i*dt), maxVel)
@@ -111,7 +111,7 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 	}
 
 	private final Vec3d quakeMoveGround(
-		final Vec3d input, 
+		final Vec3d input,
 		Vec3d velocity
 	) {
 		// Apply friction
@@ -122,34 +122,34 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 		}
 
 		return quakeAccelerate(
-			input, 
-			velocity, 
-			4.5f, 
+			input,
+			velocity,
+			4.5f,
 			quakeGetMovementSpeed()
 		).multiply(XZ);
 	}
 
 	private final Vec3d quakeMoveFly(
-		Vec3d input, 
+		Vec3d input,
 		Vec3d velocity
 	){
 		// Apply friction
 		final double speed = velocity.length();
-		if(speed > 0.0f) {	
+		if(speed > 0.0f) {
 			final double drop = speed * 5.0 * dt;
 			velocity = velocity.multiply(Math.max(speed - drop, 0.0) / speed);
 		}
 
 		return quakeAccelerate(
-			input, 
-			velocity, 
-			6.0f, 
+			input,
+			velocity,
+			6.0f,
 			quakeGetMovementSpeed() * 4.0f
 		);
 	}
 
 	private final Vec3d quakeMoveLadder(
-		Vec3d input, 
+		Vec3d input,
 		Vec3d velocity
 	) {
 		// Apply friction
@@ -163,35 +163,35 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 		input = input.subtract(normal.multiply(Math.min(input.dotProduct(normal), 0.0)));
 
 		return quakeAccelerate(
-			input, 
-			velocity, 
-			4.5f, 
+			input,
+			velocity,
+			4.5f,
 			quakeGetMovementSpeed()
 		);
 	}
 
 	private final Vec3d quakeMoveSwim(
-		final Vec3d input,	
+		final Vec3d input,
 		final Vec3d velocity
 	) {
 		// Apply gravity
 		return quakeAccelerate(
-			input, 
-			velocity.add(GRAVITY.multiply(dt * 5.0)), 
-			2.0f, 
+			input,
+			velocity.add(GRAVITY.multiply(dt * 5.0)),
+			2.0f,
 			0.015f
 		);
 	}
 
 	private final Vec3d quakeMoveAir(
-		final Vec3d input,	
+		final Vec3d input,
 		final Vec3d velocity
 	) {
 		// Apply gravity
 		return quakeAccelerate(
-			input, 
-			velocity.add(GRAVITY.multiply(dt * 20.0)), 
-			4.0f, 
+			input,
+			velocity.add(GRAVITY.multiply(dt * 20.0)),
+			4.0f,
 			0.03f
 		);
 	}
@@ -243,18 +243,18 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 			this.setOnGround(true);
 
 			inertia = new Vec3d(
-				(ent.getX() - ent.prevX), 
-				(ent.getY() - ent.prevY), 
+				(ent.getX() - ent.prevX),
+				(ent.getY() - ent.prevY),
 				(ent.getZ() - ent.prevZ)
 			);
 		}
 	}
 
 	private void quakeTickMovement() {
-		if(this.getAbilities().allowFlying 
+		if(this.getAbilities().allowFlying
 			&& !this.isGrounded
 			&& wasJumping != this.jumping
-			&& this.jumping) 
+			&& this.jumping)
 		{
 			// Check if we're trying to fly in creative mode.
 			final long jumpTick = System.currentTimeMillis();
@@ -271,12 +271,12 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 
 	@Override
 	public void setOnGround(boolean x) {
-		isGrounded = x;	
+		isGrounded = x;
 	}
-	
+
 	@Override
 	public void travel(final Vec3d input) {
-		// Update timer		
+		// Update timer
 		final long tick = System.nanoTime();
 		dt = Math.min((tick - previousQuakeUpdate) * INV_NANOSECOND, 1.0/30.0);
 		quakeTickMovement();
@@ -362,10 +362,10 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 		final Vec3d newVelocity = velocity
 			.multiply(0.5)
 			.subtract(x*invMagnitude, -strength, z*invMagnitude);
-		
+
 		this.setVelocity(
-			newVelocity.x, 
-			Math.min(0.4, newVelocity.y), 
+			newVelocity.x,
+			Math.min(0.4, newVelocity.y),
 			newVelocity.z
 		);
 	}
@@ -376,12 +376,12 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 		if(this.isGrounded && this.isSneaking() && !this.jumping) {
 			// Handle special case sneaking collision :c
 			QuakeCollider.quakeCollide(
-				this, 
-				isGrounded, 
-				delta, 
+				this,
+				isGrounded,
+				delta,
 				cameraOffset
 			);
-			
+
 			QuakeCollider.quakeSneak(this);
 		} else if(this.noClip) {
 			// Noclip case
@@ -389,9 +389,9 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 		} else {
 			// General case
 			QuakeCollider.quakeCollide(
-				this, 
-				isGrounded, 
-				delta, 
+				this,
+				isGrounded,
+				delta,
 				cameraOffset
 			);
 		}

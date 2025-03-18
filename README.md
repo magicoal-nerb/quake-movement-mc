@@ -1,10 +1,10 @@
 # quake-movement-mc
-Quake movement reimplementation in Minecraft.
+*Quake movement reimplementation in Minecraft.*
 
 <div style="line-height: 1.2;">
-Only version supported right now is 1.20.1. 
-  
-Shoutouts to Gayle, Pentagonal, Nobonet, and KeyboardCombination for testing this mod!
+Only version supported right now is 1.20.1.
+
+Shoutouts to Gayle, Pentagonal, Nobonet, and KeyboardCombination for testing out this mod!
 </div>
 
 *Note: this mod is a heavy WIP, expect bugs! Report them by creating an issue!!*
@@ -21,5 +21,6 @@ Shoutouts to Gayle, Pentagonal, Nobonet, and KeyboardCombination for testing thi
 - [ ] Boot enchantment
 - [ ] Slope physics
 - [ ] Some support for other mods like Create(so inertia isn't messed up)
+
 
 *Also, please don't try playing on actual servers with this!!*

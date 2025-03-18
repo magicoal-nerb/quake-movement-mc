@@ -13,11 +13,11 @@ import net.minecraft.entity.Entity;
 
 // Mostly because I might add continuous collision in the future
 @SuppressWarnings("unused")
-public class QuakeCollider {    
+public class QuakeCollider {
     private static final Vec3d X_NEG = new Vec3d(-1.0, 0.0, 0.0);
     private static final Vec3d Y_NEG = new Vec3d(0.0, -1.0, 0.0);
     private static final Vec3d Z_NEG = new Vec3d(0.0, 0.0, -1.0);
-    
+
     private static final Vec3d X_POS = new Vec3d(1.0, 0.0, 0.0);
     private static final Vec3d Y_POS = new Vec3d(0.0, 1.0, 0.0);
     private static final Vec3d Z_POS = new Vec3d(0.0, 0.0, 1.0);
@@ -36,21 +36,21 @@ public class QuakeCollider {
         public Vec3d max;
     };
 
-    private static class DiscreteContact { 
+    private static class DiscreteContact {
         public boolean active = false;
         public Vec3d normal;
         public Vec3d mtv;
     };
 
-    private static class ContinuousContact { 
+    private static class ContinuousContact {
         public boolean active = false;
         public Vec3d normal;
         public double t;
     };
 
     private static final boolean doesAABBCollide(
-        final Vec3d min, 
-        final Vec3d max, 
+        final Vec3d min,
+        final Vec3d max,
         final Vec3d position
     ) {
         // Within AABB?
@@ -139,7 +139,7 @@ public class QuakeCollider {
     }
 
     public static final Vec3d quakeGetWall(
-        final Entity entity, 
+        final Entity entity,
         final Vec3d wishDir
     ) {
         final Box box = entity.getBoundingBox();
@@ -184,8 +184,8 @@ public class QuakeCollider {
 
         final Vec3d plane = new Vec3d(center.x, 0, center.z);
         final Vec3d halfSize = new Vec3d(
-            (box.maxX - box.minX) * 0.5 - 1e-1, 
-            (box.maxY - box.minY) * 0.5 - 1e-1, 
+            (box.maxX - box.minX) * 0.5 - 1e-1,
+            (box.maxY - box.minY) * 0.5 - 1e-1,
             (box.maxZ - box.minZ) * 0.5 - 1e-1
         );
 
@@ -232,13 +232,13 @@ public class QuakeCollider {
             0.0,
             (position.z == plane.z ? 1.0 : 0.0)
         );
-        
+
         entity.setPosition(position.x, entity.getPos().y + position.y, position.z);
         entity.setVelocity(velocity);
     }
 
     private static ArrayList<Box> quakeGetCollidingBoxes(
-        final Entity entity, 
+        final Entity entity,
         final Vec3d offset
     ) {
         // Create boxes
@@ -258,7 +258,7 @@ public class QuakeCollider {
     }
 
 	public static void quakeCollide(
-        final Entity entity, 
+        final Entity entity,
         final boolean wasOnGround,
         Vec3d offset,
         AtomicReference<Vec3d> camera
@@ -266,15 +266,15 @@ public class QuakeCollider {
         // Fields
         final Box box = entity.getBoundingBox();
         final Vec3d halfSize = new Vec3d(
-            (box.maxX - box.minX) * 0.5, 
-            (box.maxY - box.minY) * 0.5, 
+            (box.maxX - box.minX) * 0.5,
+            (box.maxY - box.minY) * 0.5,
             (box.maxZ - box.minZ) * 0.5
         );
 
         // Do discrete step, because Minecraft will just
         // teleport you back anyways lol
-        AtomicReference<Vec3d> velocity = new AtomicReference<Vec3d>(entity.getVelocity()); 
-        AtomicReference<Vec3d> position = new AtomicReference<Vec3d>(box.getCenter()); 
+        AtomicReference<Vec3d> velocity = new AtomicReference<Vec3d>(entity.getVelocity());
+        AtomicReference<Vec3d> position = new AtomicReference<Vec3d>(box.getCenter());
         double prevY = position.get().y + offset.y;
 
         // Generate contacts
@@ -289,10 +289,10 @@ public class QuakeCollider {
             for(Box shape: boxes) {
                 localBox.min = new Vec3d(shape.minX, shape.minY, shape.minZ);
                 localBox.max = new Vec3d(shape.maxX, shape.maxY, shape.maxZ);
-                
+
                 generateDiscreteContact(
-                    localBox, 
-                    halfSize, 
+                    localBox,
+                    halfSize,
                     position.get(),
                     discrete
                 );
@@ -327,5 +327,5 @@ public class QuakeCollider {
         entity.setOnGround(prevY < position.get().y);
         entity.setVelocity(velocity.get());
         entity.setPosition(position.get().add(0.0, -halfSize.y, 0.0));
-	}
+    }
 }

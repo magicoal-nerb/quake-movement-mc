@@ -16,7 +16,7 @@ public abstract class QuakePlayerTicker {
     @Shadow public ClientPlayerEntity player;
     @Inject(at = @At("HEAD"), method = "render")
     private void render(boolean tick, CallbackInfo ci) {
-        if(player == null 
+        if(player == null
             || player.input == null){
             return;
         }
@@ -27,7 +27,7 @@ public abstract class QuakePlayerTicker {
             0.0,
             player.input.movementForward
         );
-        
+
         // Update our quake movement :-)
         entity.input.tick(false, 0.0f);
         entity.travel(input);
