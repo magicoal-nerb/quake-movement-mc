@@ -214,7 +214,7 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 		final Box playerBox = this.getBoundingBox();
 		final double minY = playerBox.minY + 0.2;
 		final Vec3d center = playerBox.getCenter();
-        final List<Entity> list = this
+		final List<Entity> list = this
 			.getWorld()
 			.getOtherEntities(this, playerBox.expand(0.01), ((hit) -> {
 				return true;
