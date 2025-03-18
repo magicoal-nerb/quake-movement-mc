@@ -21,15 +21,14 @@ public abstract class QuakePlayerTicker {
             return;
         }
 
-        final ClientPlayerEntity entity = (ClientPlayerEntity)((Object)player);
         final Vec3d input = new Vec3d(
             player.input.movementSideways,
             0.0,
             player.input.movementForward
         );
 
-        // Update our quake movement :-)
-        entity.input.tick(false, 0.0f);
-        entity.travel(input);
+		// Update our quake movement :-)
+		player.input.tick(false, 0.0f);
+		player.travel(input);
     }
 }
