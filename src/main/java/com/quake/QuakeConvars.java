@@ -3,8 +3,6 @@ package com.quake;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 
-import com.mojang.brigadier.arguments.BoolArgumentType;
-import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
