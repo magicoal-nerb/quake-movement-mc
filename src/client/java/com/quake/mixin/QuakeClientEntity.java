@@ -34,7 +34,6 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 	@Override
 	public void setOnGround(boolean x) {
 		// Set on ground if enabled or something
-		// lol
 		if(entity.quakeEnabled()) {
 			entity.minecraftSetOnGround(x);
 		} else {
@@ -49,6 +48,8 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 			final long tick = System.nanoTime();
 			double dt = Math.min((tick - previousTick) * INV_NANOSECOND, 1.0/30.0);
 			previousTick = tick;
+
+			super.setOnGround(true);
 			entity.minecraftTravel(input, dt);
 		} else {
 			super.travel(input);

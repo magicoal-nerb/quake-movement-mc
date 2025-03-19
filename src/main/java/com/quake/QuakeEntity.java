@@ -315,7 +315,7 @@ public class QuakeEntity {
 		final double y = this.cameraOffset.get().y + Math.max(Math.min(-this.cameraOffset.get().y, getupSpeed), -getupSpeed);
 		this.cameraOffset.set(new Vec3d(0.0, y, 0.0));
 
-		minecraftMove(MovementType.SELF, delta);
+		entity.move(MovementType.SELF, delta);
 	}
 
 	public void minecraftTakeKnockback(double strength, double x, double z) {
@@ -329,7 +329,7 @@ public class QuakeEntity {
 			.multiply(0.5)
 			.subtract(x*invMagnitude, -strength, z*invMagnitude);
 
-			entity.setVelocity(
+		entity.setVelocity(
 			newVelocity.x,
 			Math.min(0.4, newVelocity.y),
 			newVelocity.z
@@ -337,8 +337,7 @@ public class QuakeEntity {
 	}
 
 	public void minecraftMove(MovementType type, Vec3d delta) {
-		entity.setOnGround(true);
-		if(this.isGrounded && entity.isSneaking() && !entity.jumping) {
+		if(isGrounded && entity.isSneaking() && !entity.jumping) {
 			// Handle special case sneaking collision :c
 			QuakeCollider.quakeCollide(
 				entity,
