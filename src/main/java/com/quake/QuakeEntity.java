@@ -22,6 +22,9 @@ public class QuakeEntity {
 
 	private Vec3d inertia = Vec3d.ZERO;
 	private boolean isGrounded;
+
+	private boolean desiredJumping;
+	private boolean isJumping;
 	private PlayerEntity entity;
 
 	public QuakeEntity(PlayerEntity ent) {
@@ -36,7 +39,7 @@ public class QuakeEntity {
 	}
 
 	public static boolean quakeEnabled(Entity entity) {
-		return QuakeConvars.pl_enabled == 1.0 && entity.getVehicle() == null;
+		return QuakeConvars.pl_enabled && entity.getVehicle() == null;
 	}
 
 	private static final Vec3d quakeGetWishDirection(
@@ -200,6 +203,11 @@ public class QuakeEntity {
 			.multiply(XZ)
 			.add(new Vec3d(0.0, (entity.getJumpVelocity() - entity.getJumpBoostVelocityModifier()) * 0.8, 0.0))
 			.add(inertia);
+
+		if(!QuakeConvars.pl_autohop) {
+			isJumping = false;
+		}
+
 		entity.setVelocity(velocity);
 	}
 
@@ -244,6 +252,13 @@ public class QuakeEntity {
 		}
 	}
 
+	public void quakeTickMovement() {
+		if(desiredJumping != entity.jumping) {
+			desiredJumping = entity.jumping;
+			isJumping = desiredJumping;
+		}
+	}
+
 	// Minecraft overrides
 	public void minecraftSetOnGround(boolean x) {
 		isGrounded = x;
@@ -253,6 +268,8 @@ public class QuakeEntity {
 		// Update timer
 		final long tick = System.nanoTime();
 		this.dt = dt;
+
+		quakeTickMovement();
 		quakeTickBoost();
 
 		// State variables
@@ -269,18 +286,16 @@ public class QuakeEntity {
 			final Vec3d up = right.crossProduct(flyDirection);
 
 			// Set velocity
-			flyDirection.add(up.multiply(entity.isSneaking() ? -1.0 : entity.jumping ? 1.0 : 0.0));
+			flyDirection.add(up.multiply(entity.isSneaking() ? -1.0 : isJumping ? 1.0 : 0.0));
 			entity.setVelocity(quakeMoveFly(flyDirection, entity.getVelocity()));
 		} else if(entity.isClimbing() && previousLadderUpdate < tick) {
 			// Player is climbing
 			final double y = -Math.sin(pitch * RAD) * input.z;
-			if(entity.jumping) {
+			if(isJumping) {
 				// Jumping off a ladder, also make sure there's
 				// some delay here haha
 				Vec3d normal = QuakeCollider.quakeGetWall(entity, input);
 				entity.setVelocity(normal.multiply(0.3).add(0.0, 0.2, 0.0));
-				entity.setJumping(false);
-
 				previousLadderUpdate = tick + 300000L;
 			} else {
 				entity.setVelocity(quakeMoveLadder(wishDirection.add(0, y, 0), entity.getVelocity()));
@@ -297,7 +312,7 @@ public class QuakeEntity {
 			}
 
 			entity.setVelocity(quakeMoveAir(wishDirection, entity.getVelocity()));
-		} else if(entity.jumping){
+		} else if(isJumping){
 			// Player is jumping
 			quakeJump();
 		} else {
@@ -309,10 +324,11 @@ public class QuakeEntity {
 		Vec3d velocity = entity.getVelocity();
 
 		final double speed = Math.sqrt(velocity.x*velocity.x + velocity.z*velocity.z);
-		if(QuakeConvars.pl_speed_cap != 0.0 && speed > 1e-3) {
+		if(QuakeConvars.pl_speed_cap != 0.0 && speed > QuakeConvars.pl_speed_cap) {
 			// Apply a hard cap if you're lame LOL!
 			final double scale = Math.min(QuakeConvars.pl_speed_cap / speed, 1.0);
 			velocity = velocity.multiply(scale, 1.0, scale);
+			entity.setVelocity(velocity);
 		}
 
 		Vec3d delta = velocity.add(inertia).multiply(dt * 20.0);
@@ -346,7 +362,7 @@ public class QuakeEntity {
 	}
 
 	public void minecraftMove(MovementType type, Vec3d delta) {
-		if(isGrounded && entity.isSneaking() && !entity.jumping) {
+		if(isGrounded && entity.isSneaking() && !isJumping) {
 			// Handle special case sneaking collision :c
 			QuakeCollider.quakeCollide(
 				entity,

@@ -2,6 +2,7 @@ package com.quake;
 
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.minecraft.text.Text;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
@@ -15,6 +16,7 @@ public class QuakeClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		// this is so Frutiger Aero
+		System.out.println("Init Quake Client! :-)");
 		quakecCreateCommands();
 	}
 
@@ -32,7 +34,9 @@ public class QuakeClient implements ClientModInitializer {
 
 	private static int quakecToggle(CommandContext<FabricClientCommandSource> context) {
 		final boolean enabled = BoolArgumentType.getBool(context, "toggle");
-		QuakeConvars.pl_enabled = enabled ? 1.0 : 0.0;
+		QuakeConvars.pl_enabled = enabled;
+		context.getSource()
+			.sendFeedback(Text.literal(enabled ? "Enabled quake movement" : "Disabled quake movement"));
 
 		return 1;
 	}

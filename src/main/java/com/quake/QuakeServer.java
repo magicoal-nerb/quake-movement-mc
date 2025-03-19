@@ -7,14 +7,9 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.Event;
 
-import net.minecraft.server.command.ServerCommandSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.context.CommandContext;
 
 public class QuakeServer implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("quake");
@@ -22,11 +17,13 @@ public class QuakeServer implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		LOGGER.info("Init quake thread! :-)");
+		LOGGER.info("Init Quake server! :-)");
 		quakeCreateCommands();
 	}
 
 	private static void quakeCreateCommands() {
+		// Initializes convar commands
+		try { QuakeConvars.init(); } catch(Exception e) {}
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			dispatcher.register(
 				literal("quake")
@@ -34,24 +31,17 @@ public class QuakeServer implements ModInitializer {
 					argument("field", StringArgumentType.string())
 					.suggests((context, builder) -> {
 						Field[] fields = QuakeConvars.class.getFields();
-						for(Field f: fields)
-							builder.suggest(f.getName());
+						for(Field f: fields) {
+							if(f.getType() == double.class || f.getType() == boolean.class) {
+								builder.suggest(f.getName());
+							}
+						}
+
 						return builder.buildFuture();
 					})
-					.then(
-						argument("value", DoubleArgumentType.doubleArg())
-						.executes(QuakeServer::quakeSetConvar)
-					)
+					.then(argument("value", StringArgumentType.string()).executes(QuakeConvars::quakeCmdSetConvar))
 				)
 			);
 		});
-	}
-
-	private static int quakeSetConvar(CommandContext<ServerCommandSource> context) {
-		final String field = StringArgumentType.getString(context, "field");
-		final double value = DoubleArgumentType.getDouble(context, "value");
-		QuakeConvars.quakeSetConvar(field, value);
-
-		return 1;
 	}
 }

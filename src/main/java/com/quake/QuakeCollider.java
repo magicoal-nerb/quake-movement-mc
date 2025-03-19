@@ -191,7 +191,7 @@ public class QuakeCollider {
 
         final Iterator<VoxelShape> voxels = entity
             .getWorld()
-            .getBlockCollisions(entity, box.expand(1.0))
+            .getBlockCollisions(entity, box.expand(0.5))
             .iterator();
 
         AtomicReference<Double> bestCost = new AtomicReference<Double>(Double.MAX_VALUE);
