@@ -14,6 +14,7 @@ public class QuakeConvars {
 	public static double pl_air_speed = 0.03;
 	public static double pl_enabled = 1.0;
 	public static double pl_autohop = 1.0;
+	public static double pl_speed_cap = 0.0;
 
 	public static void quakeSetConvar(final String name, final double value) {
 		try {
@@ -24,6 +25,7 @@ public class QuakeConvars {
 	}
 
 	public static void quakeSetConvar() {
-		// TODO: implement a method for this using a byte array from the server. so then physics variables replicate n ye
+		// TODO: implement a method for this using a byte array from the server.
+		// so then physics variables replicate n ye
 	}
 }

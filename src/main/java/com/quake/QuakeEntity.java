@@ -306,7 +306,16 @@ public class QuakeEntity {
 		}
 
 		// Set position, then clip
-		Vec3d delta = entity.getVelocity().add(inertia).multiply(dt * 20.0);
+		Vec3d velocity = entity.getVelocity();
+
+		final double speed = Math.sqrt(velocity.x*velocity.x + velocity.z*velocity.z);
+		if(QuakeConvars.pl_speed_cap != 0.0 && speed > 1e-3) {
+			// Apply a hard cap if you're lame LOL!
+			final double scale = Math.min(QuakeConvars.pl_speed_cap / speed, 1.0);
+			velocity = velocity.multiply(scale, 1.0, scale);
+		}
+
+		Vec3d delta = velocity.add(inertia).multiply(dt * 20.0);
 		entity.limbAnimator.updateLimbs(0.0F, 0.4F);
 		entity.bodyYaw = entity.headYaw;
 
