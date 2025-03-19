@@ -33,27 +33,45 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 
 	@Override
 	public void setOnGround(boolean x) {
-		entity.minecraftSetOnGround(x);
+		// Set on ground if enabled or something
+		// lol
+		if(entity.quakeEnabled()) {
+			entity.minecraftSetOnGround(x);
+		} else {
+			super.setOnGround(x);
+		}
 	}
 
 	@Override
 	public void travel(final Vec3d input) {
 		// Update timer
-		final long tick = System.nanoTime();
-		double dt = Math.min((tick - previousTick) * INV_NANOSECOND, 1.0/30.0);
-		previousTick = tick;
-		entity.minecraftTravel(input, dt);
+		if(entity.quakeEnabled()) {
+			final long tick = System.nanoTime();
+			double dt = Math.min((tick - previousTick) * INV_NANOSECOND, 1.0/30.0);
+			previousTick = tick;
+			entity.minecraftTravel(input, dt);
+		} else {
+			super.travel(input);
+		}
 	}
 
 	@Override
 	public void takeKnockback(double strength, double x, double z) {
-		// Take kb
-		entity.minecraftTakeKnockback(strength, x, z);
+		// Take KB
+		if(entity.quakeEnabled()) {
+			entity.minecraftTakeKnockback(strength, x, z);
+		} else {
+			super.takeKnockback(strength, x, z);
+		}
 	}
 
 	@Override
 	public void move(MovementType type, Vec3d delta) {
-		entity.move(type, delta);
+		if(entity.quakeEnabled()) {
+			entity.minecraftMove(type, delta);
+		} else {
+			super.move(type, delta);
+		}
 	}
 
 	@Override
@@ -70,5 +88,8 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 	@Override
 	public void jump() {
 		// Nothing :P
+		if(!entity.quakeEnabled()) {
+			super.jump();
+		}
 	}
 }

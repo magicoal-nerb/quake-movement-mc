@@ -9,6 +9,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.quake.QuakeEntity;
+
 @Mixin(value = MinecraftClient.class, priority = Integer.MAX_VALUE)
 public abstract class QuakePlayerTicker {
     // This logic updates our player at a higher tickrate. Kind of a hack,
@@ -17,7 +19,9 @@ public abstract class QuakePlayerTicker {
     @Inject(at = @At("HEAD"), method = "render")
     private void render(boolean tick, CallbackInfo ci) {
         if(player == null
-            || player.input == null){
+            || player.input == null
+			|| !QuakeEntity.quakeEnabled(player)){
+			// Cancel, as quake movement does not apply.
             return;
         }
 

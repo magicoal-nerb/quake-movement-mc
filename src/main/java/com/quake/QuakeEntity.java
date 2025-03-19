@@ -30,9 +30,13 @@ public class QuakeEntity {
 		entity = ent;
 	}
 
-	public void setCurrentEntity(PlayerEntity ent) {
-		// ok
-		this.entity = ent;
+	// Checks if quake movement should be enabled.
+	public boolean quakeEnabled() {
+		return quakeEnabled(entity);
+	}
+
+	public static boolean quakeEnabled(Entity entity) {
+		return QuakeConvars.pl_enabled == 1.0 && entity.getVehicle() == null;
 	}
 
 	private static final Vec3d quakeGetWishDirection(
@@ -90,8 +94,8 @@ public class QuakeEntity {
 	private final Vec3d quakeAccelerate(
 		final Vec3d input,
 		final Vec3d velocity,
-		final float accelerate,
-		final float maxVelocity
+		final double accelerate,
+		final double maxVelocity
 	) {
 		// Constrain min(v.(i + i*dt), maxVel)
 		final double projection = velocity.dotProduct(input);
@@ -99,7 +103,7 @@ public class QuakeEntity {
 		return velocity.add(input.multiply(accel));
 	}
 
-	private final float quakeGetMovementSpeed() {
+	private final double quakeGetMovementSpeed() {
 		// Gets the player's movement speed
 		return entity.getMovementSpeed() * (entity.isSneaking() ? 0.6f : entity.isSprinting() ? 2.0f : 1.0f) * 2.0f;
 	}
@@ -111,14 +115,14 @@ public class QuakeEntity {
 		// Apply friction
 		final double speed = velocity.length();
 		if(speed > 0.0f) {
-			final double drop = speed * 20.0 * dt;
+			final double drop = speed * QuakeConvars.pl_ground_friction * dt;
 			velocity = velocity.multiply(Math.max(speed - drop, 0.0) / speed);
 		}
 
 		return quakeAccelerate(
 			input,
 			velocity,
-			4.5f,
+			QuakeConvars.pl_ground_acceleration,
 			quakeGetMovementSpeed()
 		).multiply(XZ);
 	}
@@ -130,15 +134,15 @@ public class QuakeEntity {
 		// Apply friction
 		final double speed = velocity.length();
 		if(speed > 0.0f) {
-			final double drop = speed * 5.0 * dt;
+			final double drop = speed * QuakeConvars.pl_fly_friction * dt;
 			velocity = velocity.multiply(Math.max(speed - drop, 0.0) / speed);
 		}
 
 		return quakeAccelerate(
 			input,
 			velocity,
-			6.0f,
-			quakeGetMovementSpeed() * 4.0f
+			QuakeConvars.pl_fly_accelerate,
+			quakeGetMovementSpeed() * 4.0
 		);
 	}
 
@@ -149,7 +153,7 @@ public class QuakeEntity {
 		// Apply friction
 		final double speed = velocity.length();
 		if(speed > 0.0f) {
-			final double drop = speed * 20.0 * dt;
+			final double drop = speed * QuakeConvars.pl_ground_friction * dt;
 			velocity = velocity.multiply(Math.max(speed - drop, 0.0) / speed);
 		}
 
@@ -159,7 +163,7 @@ public class QuakeEntity {
 		return quakeAccelerate(
 			input,
 			velocity,
-			4.5f,
+			QuakeConvars.pl_ladder_accelerate,
 			quakeGetMovementSpeed()
 		);
 	}
@@ -172,8 +176,8 @@ public class QuakeEntity {
 		return quakeAccelerate(
 			input,
 			velocity.add(GRAVITY.multiply(dt * 5.0)),
-			2.0f,
-			0.015f
+			QuakeConvars.pl_swim_accelerate,
+			QuakeConvars.pl_swim_speed
 		);
 	}
 
@@ -185,13 +189,9 @@ public class QuakeEntity {
 		return quakeAccelerate(
 			input,
 			velocity.add(GRAVITY.multiply(dt * 20.0)),
-			4.0f,
-			0.03f
+			QuakeConvars.pl_air_accelerate,
+			QuakeConvars.pl_air_speed
 		);
-	}
-
-	public boolean quakeEnabled() {
-		return entity.getVehicle() == null;
 	}
 
 	private void quakeJump() {
@@ -199,7 +199,7 @@ public class QuakeEntity {
 		final Vec3d velocity = entity.getVelocity()
 			.multiply(XZ)
 			.add(new Vec3d(0.0, (entity.getJumpVelocity() - entity.getJumpBoostVelocityModifier()) * 0.8, 0.0))
-			.add(inertia.multiply(1.5));
+			.add(inertia);
 		entity.setVelocity(velocity);
 	}
 
@@ -210,7 +210,7 @@ public class QuakeEntity {
 		final Vec3d center = playerBox.getCenter();
 		final List<Entity> list = entity
 			.getWorld()
-			.getOtherEntities(entity, playerBox.expand(0.01), ((hit) -> {
+			.getOtherEntities(entity, playerBox.expand(0.15), ((hit) -> {
 				return true;
 			}));
 
@@ -233,7 +233,7 @@ public class QuakeEntity {
 			// Set inertia
 			final Entity ent = list.get(bestIndex);
 			final Box currentBox = ent.getBoundingBox();
-			entity.setPos(center.x, currentBox.maxY + 0.001, center.z);
+			entity.setPos(center.x, currentBox.maxY + 0.15, center.z);
 			entity.setOnGround(true);
 
 			inertia = new Vec3d(
@@ -260,12 +260,7 @@ public class QuakeEntity {
 		final float yaw = entity.getYaw() % 360.0f;
 
 		final Vec3d wishDirection = quakeGetWishDirection(input, yaw * RAD);
-		if(!quakeEnabled()) {
-			// Ensure our entity interpolation
-			// is still smooth. :-)
-			entity.limbAnimator.updateLimbs(0.0F, 0.4F);
-			return;
-		} else if(entity.getAbilities().flying || entity.noClip) {
+		if(entity.getAbilities().flying || entity.noClip) {
 			// Player is flying
 			Vec3d flyDirection = quakeGetWishDirection(input, yaw * RAD, pitch * RAD);
 
@@ -280,11 +275,12 @@ public class QuakeEntity {
 			// Player is climbing
 			final double y = -Math.sin(pitch * RAD) * input.z;
 			if(entity.jumping) {
-				// Jumping off a ladder
+				// Jumping off a ladder, also make sure there's
+				// some delay here haha
 				Vec3d normal = QuakeCollider.quakeGetWall(entity, input);
-
 				entity.setVelocity(normal.multiply(0.3).add(0.0, 0.2, 0.0));
 				entity.setJumping(false);
+
 				previousLadderUpdate = tick + 300000L;
 			} else {
 				entity.setVelocity(quakeMoveLadder(wishDirection.add(0, y, 0), entity.getVelocity()));
@@ -319,7 +315,7 @@ public class QuakeEntity {
 		final double y = this.cameraOffset.get().y + Math.max(Math.min(-this.cameraOffset.get().y, getupSpeed), -getupSpeed);
 		this.cameraOffset.set(new Vec3d(0.0, y, 0.0));
 
-		move(MovementType.SELF, delta);
+		minecraftMove(MovementType.SELF, delta);
 	}
 
 	public void minecraftTakeKnockback(double strength, double x, double z) {
@@ -340,7 +336,7 @@ public class QuakeEntity {
 		);
 	}
 
-	public void move(MovementType type, Vec3d delta) {
+	public void minecraftMove(MovementType type, Vec3d delta) {
 		entity.setOnGround(true);
 		if(this.isGrounded && entity.isSneaking() && !entity.jumping) {
 			// Handle special case sneaking collision :c
