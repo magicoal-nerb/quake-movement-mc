@@ -12,12 +12,12 @@ Shoutouts to Gayle, Pentagonal, Nobonet, and KeyboardCombination for testing out
 ![Bunnyhop demonstration](assets/bhop.gif)
 
 ## Features added so far
+- [x] Server command system to change physics variables
 - [x] Higher tickrate
 - [x] Entity boosting
 
 ## Planned features
 - [ ] Some backwards compatibility?
-- [ ] Server command system to change physics variables
 - [ ] Boot enchantment
 - [ ] Slope physics
 - [ ] Some support for other mods like Create(so inertia isn't messed up)
