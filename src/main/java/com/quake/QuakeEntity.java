@@ -394,7 +394,7 @@ public class QuakeEntity {
 	public Vec3d minecraftGetLerpedPos(final float tickDelta) {
 		if(quakeEnabled()) {
 			// Provides the render offset
-			return entity.getPos();
+			return entity.getPos().add(cameraOffset.get());
 		} else {
 			// Use Minecraft's default interpolation.
 			double d = MathHelper.lerp((double)tickDelta, entity.prevX, entity.getX());
@@ -407,7 +407,6 @@ public class QuakeEntity {
 	public Vec3d minecraftGetCameraPosVec(final float tickDelta) {
 		// Get interpolated offset
 		return minecraftGetLerpedPos(tickDelta)
-			.add(0.0, (double)entity.getStandingEyeHeight(), 0.0)
-			.add(cameraOffset.get());
+			.add(0.0, (double)entity.getStandingEyeHeight(), 0.0);
 	}
 }
