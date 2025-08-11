@@ -14,7 +14,6 @@ import net.minecraft.entity.MovementType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.util.math.BlockPos;
 
 @Mixin(value = ClientPlayerEntity.class, priority = 1)
 public abstract class QuakeClientEntity extends PlayerEntity {
@@ -22,8 +21,8 @@ public abstract class QuakeClientEntity extends PlayerEntity {
 	@Unique private static QuakeEntity entity;
 	@Unique private long previousTick;
 
-	public QuakeClientEntity(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
-		super(world, pos, yaw, gameProfile);
+  	public QuakeClientEntity(World world, GameProfile profile) {
+		super(world, profile);
 	}
 
 	@Inject(at = @At("HEAD"), method = "init()V")
