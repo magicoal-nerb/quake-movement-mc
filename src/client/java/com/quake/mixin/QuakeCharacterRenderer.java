@@ -41,17 +41,15 @@ public abstract class QuakeCharacterRenderer {
         VertexConsumerProvider vertexConsumers
     ) {
         Vec3d lerped = entity.getLerpedPos(tickDelta);
-        float g = MathHelper.lerp(tickDelta, entity.prevYaw, entity.getYaw());
-        this.entityRenderDispatcher.render(
-            entity,
+		this.entityRenderDispatcher.render(
+			entity,
             lerped.x - cameraX,
             lerped.y - cameraY,
             lerped.z - cameraZ,
-            g,
-            tickDelta,
-            matrices,
-            vertexConsumers,
+			tickDelta,
+			matrices,
+			vertexConsumers,
             this.entityRenderDispatcher.getLight(entity, tickDelta)
-        );
+		);
     }
 }
