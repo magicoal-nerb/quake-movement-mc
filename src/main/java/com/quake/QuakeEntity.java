@@ -245,9 +245,9 @@ public class QuakeEntity {
 			entity.setOnGround(true);
 
 			inertia = new Vec3d(
-				(ent.getX() - ent.lastX),
-				(ent.getY() - ent.lastY),
-				(ent.getZ() - ent.lastZ)
+				(ent.getX() - ent.prevX),
+				(ent.getY() - ent.prevY),
+				(ent.getZ() - ent.prevZ)
 			);
 		}
 	}
@@ -332,7 +332,7 @@ public class QuakeEntity {
 		}
 
 		Vec3d delta = velocity.add(inertia).multiply(dt * 20.0);
-		entity.limbAnimator.updateLimbs(0.0F, 0.4F, 1.0F);
+		entity.limbAnimator.updateLimbs(0.0F, 0.4F);
 		entity.bodyYaw = entity.headYaw;
 
 		// Set camera offset
@@ -344,7 +344,7 @@ public class QuakeEntity {
 	}
 
 	public void minecraftTakeKnockback(double strength, double x, double z) {
-		strength *= 1.0 - entity.getAttributeValue(EntityAttributes.ATTACK_KNOCKBACK);
+		strength *= 1.0 - entity.getAttributeValue(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE);
 		entity.setOnGround(false);
 
 		// Apply knockback
@@ -397,9 +397,9 @@ public class QuakeEntity {
 			return entity.getPos().add(cameraOffset.get());
 		} else {
 			// Use Minecraft's default interpolation.
-			double d = MathHelper.lerp((double)tickDelta, entity.lastX, entity.getX());
-			double e = MathHelper.lerp((double)tickDelta, entity.lastY, entity.getY());
-			double f = MathHelper.lerp((double)tickDelta, entity.lastZ, entity.getZ());
+			double d = MathHelper.lerp((double)tickDelta, entity.prevX, entity.getX());
+			double e = MathHelper.lerp((double)tickDelta, entity.prevY, entity.getY());
+			double f = MathHelper.lerp((double)tickDelta, entity.prevZ, entity.getZ());
 			return new Vec3d(d, e, f);
 		}
 	}

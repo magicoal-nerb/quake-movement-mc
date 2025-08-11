@@ -3,7 +3,6 @@
 
 <div style="line-height: 1.2;">
 Only version supported right now is 1.20.1.
-(this version supports 1.21.7)
 
 Shoutouts to Gayle, Pentagonal, Nobonet, and KeyboardCombination for testing out this mod!
 </div>
