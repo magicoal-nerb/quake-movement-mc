@@ -1,12 +1,12 @@
 # quake-movement-mc
-*Quake movement reimplementation in Minecraft.*
+*Quake movement reimplementation in Minecraft.*<br>
 
-<div style="line-height: 1.2;">
-Only version supported right now is 1.20.1.
-(this version supports 1.21.7)
+This mod replaces the built-in player entity collisions and movement with <Br>
+a faster custom-made solution, *so some mods might break!!*
 
-Shoutouts to Gayle, Pentagonal, Nobonet, and KeyboardCombination for testing out this mod!
-</div>
+## Credits
+Shoutouts to Gayle, Pentagonal, Nobonet, and KeyboardCombination for testing out this mod!<br>
+Dedicated to my best friend, Pentagonal, rest in peace.<br>
 
 *Note: this mod is a heavy WIP, expect bugs! Report them by creating an issue!!*
 
@@ -18,7 +18,6 @@ Shoutouts to Gayle, Pentagonal, Nobonet, and KeyboardCombination for testing out
 - [x] Entity boosting
 
 ## Planned features
-- [ ] Some backwards compatibility?
 - [ ] Boot enchantment
 - [ ] Slope physics
 - [ ] Some support for other mods like Create(so inertia isn't messed up)
