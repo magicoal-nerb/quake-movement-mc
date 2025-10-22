@@ -13,7 +13,6 @@ Dedicated to my best friend, Pentagonal, rest in peace.<br>
 ![Bunnyhop demonstration](assets/bhop.gif)
 
 ## Features added so far
-- [x] Server command system to change physics variables
 - [x] Higher tickrate
 - [x] Entity boosting
 
