@@ -59,16 +59,6 @@ public class QuakeCollider {
             && min.z < position.z && position.z < max.z;
     }
 
-	private static boolean doesAABBCollideXZ(
-		final Vec3d min,
-		final Vec3d max,
-		final Vec3d position
-	) {
-        // Within AABB along the XZ plane?
-		return min.x < position.x && position.x < max.x
-            && min.z < position.z && position.z < max.z;
-	}
-
     private static void generateSpeculativeContact(
         final AABB box,
         final Vec3d halfSize,
@@ -281,70 +271,61 @@ public class QuakeCollider {
             (box.maxZ - box.minZ) * 0.5
         );
 
+        // Do discrete step, because Minecraft will just
+        // teleport you back anyways lol
+        AtomicReference<Vec3d> velocity = new AtomicReference<Vec3d>(entity.getVelocity());
+        AtomicReference<Vec3d> position = new AtomicReference<Vec3d>(box.getCenter());
+        double prevY = position.get().y + offset.y;
+
         // Generate contacts
         final ArrayList<Box> boxes = quakeGetCollidingBoxes(entity, offset);
         final double stepHeight = entity.getStepHeight();
 
-        // Do discrete step, because Minecraft will just
-        // teleport you back anyways lol
-        AtomicReference<Vec3d> velocity = new AtomicReference<Vec3d>(entity.getVelocity());
-        AtomicReference<Vec3d> position = new AtomicReference<Vec3d>(box.getCenter().add(0.0, stepHeight, 0.0));
-        double prevY = position.get().y + offset.y;
-
-        // AtomicReference<Double> desiredStep = new AtomicReference<Double>(stepHeight);
+        AtomicReference<Double> desiredStep = new AtomicReference<Double>(stepHeight);
         for(Vec3d step : STEPS) {
             // Do discrete collision checks. Minecraft should
             // check for us anyways lol.
             position.set(position.get().add(offset.multiply(step)));
-            for(final Box shape: boxes) {
+            for(Box shape: boxes) {
                 localBox.min = new Vec3d(shape.minX, shape.minY, shape.minZ);
                 localBox.max = new Vec3d(shape.maxX, shape.maxY, shape.maxZ);
 
                 generateDiscreteContact(
                     localBox,
-                    halfSize.subtract(0.0, stepHeight, 0.0),
+                    halfSize,
                     position.get(),
                     discrete
                 );
 
                 if(discrete.active) {
-					// Colliding with AABB
-					// v -= min(dot(v, n), 0.0) * n
-					// p += mtv + n*1e-6
-					final Vec3d normal = discrete.normal.multiply(step);
-					position.set(position.get().add(discrete.mtv).add(normal.multiply(1e-6)));
-					velocity.set(projectPlane(velocity.get(), normal));
+                    final double floorY = position.get().y - halfSize.y + stepHeight;
+                    if(shape.maxY < floorY && wasOnGround) {
+                        // Case 1: ascending/descending an AABB
+                        // p += [0, maxY - (floorY - stepHeight), 0]
+                        desiredStep.set(Math.min(desiredStep.get(), shape.maxY - floorY + stepHeight));
+                    } else {
+                        // Case 2: colliding with AABB
+                        // v -= min(dot(v, n), 0.0) * n
+                        // p += mtv + n*1e-6
+                        final Vec3d normal = discrete.normal.multiply(step);
+                        desiredStep.set(0.0);
+                        position.set(position.get().add(discrete.mtv).add(normal.multiply(1e-6)));
+                        velocity.set(projectPlane(velocity.get(), normal));
+                    }
                 }
             }
         }
 
-		// Try aligning to the ground.
-		final double minY = (position.get().y - halfSize.y - stepHeight);
-		double bestStep = 0.0;
-		for(final Box shape: boxes) {
-			final Vec3d min = new Vec3d(shape.minX - halfSize.x, shape.minY, shape.minZ - halfSize.z);
-			final Vec3d max = new Vec3d(shape.maxX + halfSize.x, shape.maxY, shape.maxZ + halfSize.z);
-
-			final double step = shape.maxY - minY;
-			if(!doesAABBCollideXZ(min, max, position.get())) {
-				// Block does not contribute to final player height.
-				continue;
-			} else if(step < 0.0 || step > stepHeight) {
-				// Block cannot contribute
-				continue;
-			} else if(step > bestStep){
-				// Block can contribute!
-				bestStep = step;
-			}
-		}
-
-		// Set camera offset lol
-		camera.set(camera.get().subtract(0.0, bestStep, 0.0));
-		position.set(position.get().add(0.0, bestStep, 0.0));
+        if(desiredStep.get() != stepHeight) {
+            // Do step please
+            final double step = desiredStep.get();
+            camera.set(camera.get().subtract(0.0, step, 0.0));
+            position.set(position.get().add(0.0, step, 0.0));
+        }
 
         // Finalize state
         entity.setOnGround(prevY < position.get().y);
         entity.setVelocity(velocity.get());
-        entity.setPosition(position.get().subtract(0.0, halfSize.y + stepHeight, 0.0));
+        entity.setPosition(position.get().add(0.0, -halfSize.y, 0.0));
     }
 }

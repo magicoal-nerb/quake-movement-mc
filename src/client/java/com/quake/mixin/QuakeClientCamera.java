@@ -18,8 +18,8 @@ public abstract class QuakeClientCamera {
 	@Shadow private Entity focusedEntity;
     @Shadow protected void setRotation(float x, float y) { }
     @Shadow protected void setPos(Vec3d pos) { }
-    @Shadow protected void moveBy(float f, float g, float h) { };
-    @Shadow private float clipToSpace(float x) { return 0.0f; };
+    @Shadow protected void moveBy(double x, double y, double z) { };
+    @Shadow private double clipToSpace(double x) { return 0.0; };
     @Shadow private boolean ready;
     @Shadow private BlockView area;
     @Shadow private boolean thirdPerson;
@@ -45,11 +45,11 @@ public abstract class QuakeClientCamera {
 				this.setRotation(this.yaw + 180.0F, -this.pitch);
 			}
 
-			this.moveBy(-this.clipToSpace(4.0f), 0.0f, 0.0f);
+			this.moveBy(-this.clipToSpace(4.0), 0.0, 0.0);
 		} else if (focusedEntity instanceof LivingEntity && ((LivingEntity)focusedEntity).isSleeping()) {
 			Direction direction = ((LivingEntity)focusedEntity).getSleepingDirection();
-			this.setRotation(direction != null ? direction.getPositiveHorizontalDegrees() - 180.0F : 0.0F, 0.0F);
-			this.moveBy(0.0f, 0.3f, 0.0f);
+			this.setRotation(direction != null ? direction.asRotation() - 180.0F : 0.0F, 0.0F);
+			this.moveBy(0.0, 0.3, 0.0);
 		}
 	}
 }

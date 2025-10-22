@@ -14,7 +14,7 @@
 	"icon": "assets/quake/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": [],
+		"main": ["com.quake.QuakeServer"],
 		"client": ["com.quake.QuakeClient"]
 	},
 	"accessWidener": "quake-common.accesswidener",
@@ -27,7 +27,7 @@
 	],
 	"depends": {
 		"fabricloader": ">=0.15.10",
-		"minecraft": "~1.21.7",
+		"minecraft": "~1.20.1",
 		"java": ">=17",
 		"fabric-api": "*"
 	},
