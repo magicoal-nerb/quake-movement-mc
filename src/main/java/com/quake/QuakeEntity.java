@@ -217,7 +217,7 @@ public class QuakeEntity {
 		final double minY = playerBox.minY + 0.2;
 		final Vec3d center = playerBox.getCenter();
 		final List<Entity> list = entity
-			.getWorld()
+			.getEntityWorld()
 			.getOtherEntities(entity, playerBox.expand(0.15), ((hit) -> {
 				return true;
 			}));
@@ -245,9 +245,9 @@ public class QuakeEntity {
 			entity.setOnGround(true);
 
 			inertia = new Vec3d(
-				(ent.getX() - ent.prevX),
-				(ent.getY() - ent.prevY),
-				(ent.getZ() - ent.prevZ)
+				(ent.getX() - ent.lastX),
+				(ent.getY() - ent.lastY),
+				(ent.getZ() - ent.lastZ)
 			);
 		}
 	}
@@ -332,7 +332,7 @@ public class QuakeEntity {
 		}
 
 		Vec3d delta = velocity.add(inertia).multiply(dt * 20.0);
-		entity.limbAnimator.updateLimbs(0.0F, 0.4F);
+		entity.limbAnimator.updateLimbs(0.0F, 0.4F, 1.0F);
 		entity.bodyYaw = entity.headYaw;
 
 		// Set camera offset
@@ -344,7 +344,7 @@ public class QuakeEntity {
 	}
 
 	public void minecraftTakeKnockback(double strength, double x, double z) {
-		strength *= 1.0 - entity.getAttributeValue(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE);
+		strength *= 1.0 - entity.getAttributeValue(EntityAttributes.KNOCKBACK_RESISTANCE);
 		entity.setOnGround(false);
 
 		// Apply knockback
@@ -361,6 +361,14 @@ public class QuakeEntity {
 		);
 	}
 
+	public Vec3d minecraftGetPosition() {
+		return new Vec3d(
+			entity.getX(),
+			entity.getY(),
+			entity.getZ()
+		);
+	}
+
 	public void minecraftMove(MovementType type, Vec3d delta) {
 		if(isGrounded && entity.isSneaking() && !isJumping) {
 			// Handle special case sneaking collision :c
@@ -374,7 +382,7 @@ public class QuakeEntity {
 			QuakeCollider.quakeSneak(entity);
 		} else if(entity.noClip) {
 			// Noclip case
-			entity.setPosition(entity.getPos().add(delta));
+			entity.setPosition(minecraftGetPosition().add(delta));
 		} else {
 			// General case
 			QuakeCollider.quakeCollide(
@@ -394,12 +402,12 @@ public class QuakeEntity {
 	public Vec3d minecraftGetLerpedPos(final float tickDelta) {
 		if(quakeEnabled()) {
 			// Provides the render offset
-			return entity.getPos().add(cameraOffset.get());
+			return minecraftGetPosition().add(cameraOffset.get());
 		} else {
 			// Use Minecraft's default interpolation.
-			double d = MathHelper.lerp((double)tickDelta, entity.prevX, entity.getX());
-			double e = MathHelper.lerp((double)tickDelta, entity.prevY, entity.getY());
-			double f = MathHelper.lerp((double)tickDelta, entity.prevZ, entity.getZ());
+			double d = MathHelper.lerp((double)tickDelta, entity.lastX, entity.getX());
+			double e = MathHelper.lerp((double)tickDelta, entity.lastY, entity.getY());
+			double f = MathHelper.lerp((double)tickDelta, entity.lastZ, entity.getZ());
 			return new Vec3d(d, e, f);
 		}
 	}

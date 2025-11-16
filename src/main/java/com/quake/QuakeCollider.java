@@ -144,7 +144,7 @@ public class QuakeCollider {
     ) {
         final Box box = entity.getBoundingBox();
         final Iterator<VoxelShape> list = entity
-            .getWorld()
+            .getEntityWorld()
             .getBlockCollisions(entity, box.expand(1.0))
             .iterator();
 
@@ -190,7 +190,7 @@ public class QuakeCollider {
         );
 
         final Iterator<VoxelShape> voxels = entity
-            .getWorld()
+            .getEntityWorld()
             .getBlockCollisions(entity, box.expand(0.5))
             .iterator();
 
@@ -233,7 +233,7 @@ public class QuakeCollider {
             (position.z == plane.z ? 1.0 : 0.0)
         );
 
-        entity.setPosition(position.x, entity.getPos().y + position.y, position.z);
+        entity.setPosition(position.x, entity.getY() + position.y, position.z);
         entity.setVelocity(velocity);
     }
 
@@ -242,7 +242,7 @@ public class QuakeCollider {
         final Vec3d offset
     ) {
         // Create boxes
-        final World world = entity.getWorld();
+        final World world = entity.getEntityWorld();
         final Box box = entity.getBoundingBox();
 
         ArrayList<Box> boxes = new ArrayList<Box>();
