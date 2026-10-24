@@ -1,5 +1,6 @@
 # quake-movement-mc
 *Quake movement reimplementation in Minecraft.*<br>
+*... now in 1.21.1 NeoForge :-)*
 
 This mod replaces the built-in player entity collisions and movement with <Br>
 a faster custom-made solution, *so some mods might break!!*

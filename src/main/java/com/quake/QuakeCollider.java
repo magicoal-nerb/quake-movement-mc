@@ -4,54 +4,53 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.World;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 // Mostly because I might add continuous collision in the future
 @SuppressWarnings("unused")
 public class QuakeCollider {
-    private static final Vec3d X_NEG = new Vec3d(-1.0, 0.0, 0.0);
-    private static final Vec3d Y_NEG = new Vec3d(0.0, -1.0, 0.0);
-    private static final Vec3d Z_NEG = new Vec3d(0.0, 0.0, -1.0);
+    private static final Vec3 X_NEG = new Vec3(-1.0, 0.0, 0.0);
+    private static final Vec3 Y_NEG = new Vec3(0.0, -1.0, 0.0);
+    private static final Vec3 Z_NEG = new Vec3(0.0, 0.0, -1.0);
 
-    private static final Vec3d X_POS = new Vec3d(1.0, 0.0, 0.0);
-    private static final Vec3d Y_POS = new Vec3d(0.0, 1.0, 0.0);
-    private static final Vec3d Z_POS = new Vec3d(0.0, 0.0, 1.0);
+    private static final Vec3 X_POS = new Vec3(1.0, 0.0, 0.0);
+    private static final Vec3 Y_POS = new Vec3(0.0, 1.0, 0.0);
+    private static final Vec3 Z_POS = new Vec3(0.0, 0.0, 1.0);
 
-    private static final Vec3d[] STEPS = new Vec3d[] {
-        new Vec3d(1.0, 0.0, 1.0),
-        new Vec3d(0.0, 1.0, 0.0),
+    private static final Vec3[] STEPS = new Vec3[] {
+        new Vec3(1.0, 0.0, 1.0),
+        new Vec3(0.0, 1.0, 0.0),
     };
 
     protected static ContinuousContact continuous = new ContinuousContact();
     protected static DiscreteContact discrete = new DiscreteContact();
-    protected static AABB localBox = new AABB();
+    protected static BoundingBox localBox = new BoundingBox();
 
-    private static class AABB {
-        public Vec3d min;
-        public Vec3d max;
+    private static class BoundingBox {
+        public Vec3 min;
+        public Vec3 max;
     };
 
     private static class DiscreteContact {
         public boolean active = false;
-        public Vec3d normal;
-        public Vec3d mtv;
+        public Vec3 normal;
+        public Vec3 mtv;
     };
 
     private static class ContinuousContact {
         public boolean active = false;
-        public Vec3d normal;
+        public Vec3 normal;
         public double t;
     };
 
     private static final boolean doesAABBCollide(
-        final Vec3d min,
-        final Vec3d max,
-        final Vec3d position
+        final Vec3 min,
+        final Vec3 max,
+        final Vec3 position
     ) {
         // Within AABB?
         return min.x < position.x && position.x < max.x
@@ -60,20 +59,20 @@ public class QuakeCollider {
     }
 
     private static void generateSpeculativeContact(
-        final AABB box,
-        final Vec3d halfSize,
-        final Vec3d origin,
-        final Vec3d invDir
+        final BoundingBox box,
+        final Vec3 halfSize,
+        final Vec3 origin,
+        final Vec3 invDir
     ) {
         // There's speculative contacts, but I don't think that's
         // actually necessary here.
-        Vec3d min = new Vec3d(box.min.x - halfSize.x, box.min.y - halfSize.y, box.min.z - halfSize.z);
-        Vec3d max = new Vec3d(box.max.x + halfSize.x, box.max.y + halfSize.y, box.max.z + halfSize.z);
+        Vec3 min = new Vec3(box.min.x - halfSize.x, box.min.y - halfSize.y, box.min.z - halfSize.z);
+        Vec3 max = new Vec3(box.max.x + halfSize.x, box.max.y + halfSize.y, box.max.z + halfSize.z);
 
-        Vec3d v0 = min.subtract(origin).multiply(invDir);
-        Vec3d v1 = max.subtract(origin).multiply(invDir);
-        Vec3d rMin = new Vec3d(Math.min(v0.x, v1.x), Math.min(v0.y, v1.y), Math.min(v0.z, v1.z));
-        Vec3d rMax = new Vec3d(Math.max(v0.x, v1.x), Math.max(v0.y, v1.y), Math.max(v0.z, v1.z));
+        Vec3 v0 = min.subtract(origin).multiply(invDir);
+        Vec3 v1 = max.subtract(origin).multiply(invDir);
+        Vec3 rMin = new Vec3(Math.min(v0.x, v1.x), Math.min(v0.y, v1.y), Math.min(v0.z, v1.z));
+        Vec3 rMax = new Vec3(Math.max(v0.x, v1.x), Math.max(v0.y, v1.y), Math.max(v0.z, v1.z));
 
         double t0 = Math.max(Math.max(rMin.x, rMin.y), rMin.z);
         double t1 = Math.min(Math.min(rMax.x, rMax.y), rMax.z);
@@ -93,28 +92,28 @@ public class QuakeCollider {
         }
     }
 
-    private static Vec3d projectPlane(Vec3d p, Vec3d n) {
+    private static Vec3 projectPlane(Vec3 p, Vec3 n) {
         // Want: (p + n*lambda).n = 0, lambda>0, |n|=1
         // lambda = -p.n / n.n
         // lambda = -p.n
-        double lambda = Math.min(p.dotProduct(n), 0.0);
-        return p.subtract(n.multiply(lambda));
+        double lambda = Math.min(p.dot(n), 0.0);
+        return p.subtract(n.scale(lambda));
     }
 
     private static void generateDiscreteContact(
-        final AABB box,
-        final Vec3d halfSize,
-        final Vec3d origin,
+        final BoundingBox box,
+        final Vec3 halfSize,
+        final Vec3 origin,
         DiscreteContact info
     ) {
         // Expand box boundaries.
-        Vec3d min = box.min.subtract(halfSize);
-        Vec3d max = box.max.add(halfSize);
+        Vec3 min = box.min.subtract(halfSize);
+        Vec3 max = box.max.add(halfSize);
 
         if(doesAABBCollide(min, max, origin)) {
             // supp(box, origin - box.center)
-            final Vec3d center = min.add(max).multiply(0.5);
-            final Vec3d offset = new Vec3d(
+            final Vec3 center = min.add(max).scale(0.5);
+            final Vec3 offset = new Vec3(
                 Math.max(Math.min(origin.x - min.x, max.x - origin.x), 0.0),
                 Math.max(Math.min(origin.y - min.y, max.y - origin.y), 0.0),
                 Math.max(Math.min(origin.z - min.z, max.z - origin.z), 0.0)
@@ -138,24 +137,29 @@ public class QuakeCollider {
         }
     }
 
-    public static final Vec3d quakeGetWall(
+    public static final Vec3 quakeGetWall(
         final Entity entity,
-        final Vec3d wishDir
+        final Vec3 wishDir
     ) {
-        final Box box = entity.getBoundingBox();
+        final AABB box = entity.getBoundingBox();
         final Iterator<VoxelShape> list = entity
-            .getWorld()
-            .getBlockCollisions(entity, box.expand(1.0))
+            .level()
+            .getBlockCollisions(entity, box.inflate(1.0))
             .iterator();
 
-        final Vec3d origin = box.getCenter();
+        final Vec3 origin = box.getCenter();
 
-        Vec3d bestNormal = Vec3d.ZERO;
+        Vec3 bestNormal = Vec3.ZERO;
         double bestDot = 1.0;
         while(list.hasNext()) {
             final VoxelShape shape = list.next();
-            final Box shapeBox = shape.getBoundingBox();
-            final Vec3d center = shapeBox.getCenter();
+            if(shape.isEmpty()) {
+                // bounds() throws on empty shapes
+                continue;
+            }
+
+            final AABB shapeBox = shape.bounds();
+            final Vec3 center = shapeBox.getCenter();
 
             final double dx = Math.max(Math.min(origin.x - shapeBox.minX, shapeBox.maxX - origin.x), 0.0);
             final double dz = Math.max(Math.min(origin.z - shapeBox.minZ, shapeBox.maxZ - origin.z), 0.0);
@@ -179,43 +183,43 @@ public class QuakeCollider {
         final Entity entity
     ) {
         // Fields
-        final Box box = entity.getBoundingBox();
-        final Vec3d center = box.getCenter();
+        final AABB box = entity.getBoundingBox();
+        final Vec3 center = box.getCenter();
 
-        final Vec3d plane = new Vec3d(center.x, 0, center.z);
-        final Vec3d halfSize = new Vec3d(
+        final Vec3 plane = new Vec3(center.x, 0, center.z);
+        final Vec3 halfSize = new Vec3(
             (box.maxX - box.minX) * 0.5 - 1e-1,
             (box.maxY - box.minY) * 0.5 - 1e-1,
             (box.maxZ - box.minZ) * 0.5 - 1e-1
         );
 
         final Iterator<VoxelShape> voxels = entity
-            .getWorld()
-            .getBlockCollisions(entity, box.expand(0.5))
+            .level()
+            .getBlockCollisions(entity, box.inflate(0.5))
             .iterator();
 
         AtomicReference<Double> bestCost = new AtomicReference<Double>(Double.MAX_VALUE);
-        AtomicReference<Vec3d> bestConstraint = new AtomicReference<Vec3d>(plane);
+        AtomicReference<Vec3> bestConstraint = new AtomicReference<Vec3>(plane);
 
         // Generate constraints
         while(voxels.hasNext()) {
             final VoxelShape shape = voxels.next();
-            shape.forEachBox((minX, minY, minZ, maxX, maxY, maxZ) -> {
-                localBox.min = new Vec3d(minX, minY, minZ);
-                localBox.max = new Vec3d(maxX, maxY, maxZ);
+            shape.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
+                localBox.min = new Vec3(minX, minY, minZ);
+                localBox.max = new Vec3(maxX, maxY, maxZ);
 
                 if(maxY > box.minY + 1e-2) {
                     // Ceiling, don't use this.
                     return;
                 }
 
-                final Vec3d constraint = new Vec3d(
+                final Vec3 constraint = new Vec3(
                     Math.max(Math.min(plane.x, maxX + halfSize.x), minX - halfSize.x),
                     Math.min(maxY - box.minY + 1e-2, 0.0),
                     Math.max(Math.min(plane.z, maxZ + halfSize.z), minZ - halfSize.z)
                 );
 
-                final double cost = constraint.subtract(plane).lengthSquared();
+                final double cost = constraint.subtract(plane).lengthSqr();
                 if(cost < bestCost.get()) {
                     // Min |c - pos|
                     // Gives us a good enough constraint
@@ -226,46 +230,49 @@ public class QuakeCollider {
         }
 
         // Apply constraint
-        final Vec3d position = bestConstraint.get();
-        final Vec3d velocity = entity.getVelocity().multiply(
+        final Vec3 position = bestConstraint.get();
+        final Vec3 velocity = entity.getDeltaMovement().multiply(
             (position.x == plane.x ? 1.0 : 0.0),
             0.0,
             (position.z == plane.z ? 1.0 : 0.0)
         );
 
-        entity.setPosition(position.x, entity.getPos().y + position.y, position.z);
-        entity.setVelocity(velocity);
+        entity.setPos(position.x, entity.position().y + position.y, position.z);
+        entity.setDeltaMovement(velocity);
     }
 
-    private static ArrayList<Box> quakeGetCollidingBoxes(
+    private static ArrayList<AABB> quakeGetCollidingBoxes(
         final Entity entity,
-        final Vec3d offset
+        final Vec3 offset
     ) {
         // Create boxes
-        final World world = entity.getWorld();
-        final Box box = entity.getBoundingBox();
+        final Level level = entity.level();
+        final AABB box = entity.getBoundingBox();
+        final AABB swept = box.expandTowards(offset);
 
-        ArrayList<Box> boxes = new ArrayList<Box>();
-        for(VoxelShape shape: world.getBlockCollisions(entity, box.stretch(offset))) {
-            boxes.addAll(shape.getBoundingBoxes());
+        ArrayList<AABB> boxes = new ArrayList<AABB>();
+        for(VoxelShape shape : level.getBlockCollisions(entity, swept)) {
+            boxes.addAll(shape.toAabbs());
         }
 
-        for(VoxelShape shape: world.getEntityCollisions(entity, box.stretch(offset))) {
-            boxes.add(shape.getBoundingBox());
+        for(VoxelShape shape : level.getEntityCollisions(entity, swept)) {
+            if(!shape.isEmpty()) {
+                boxes.add(shape.bounds());
+            }
         }
 
         return boxes;
     }
 
-	public static void quakeCollide(
+    public static void quakeCollide(
         final Entity entity,
         final boolean wasOnGround,
-        Vec3d offset,
-        AtomicReference<Vec3d> camera
+        Vec3 offset,
+        AtomicReference<Vec3> camera
     ) {
         // Fields
-        final Box box = entity.getBoundingBox();
-        final Vec3d halfSize = new Vec3d(
+        final AABB box = entity.getBoundingBox();
+        final Vec3 halfSize = new Vec3(
             (box.maxX - box.minX) * 0.5,
             (box.maxY - box.minY) * 0.5,
             (box.maxZ - box.minZ) * 0.5
@@ -273,22 +280,22 @@ public class QuakeCollider {
 
         // Do discrete step, because Minecraft will just
         // teleport you back anyways lol
-        AtomicReference<Vec3d> velocity = new AtomicReference<Vec3d>(entity.getVelocity());
-        AtomicReference<Vec3d> position = new AtomicReference<Vec3d>(box.getCenter());
+        AtomicReference<Vec3> velocity = new AtomicReference<Vec3>(entity.getDeltaMovement());
+        AtomicReference<Vec3> position = new AtomicReference<Vec3>(box.getCenter());
         double prevY = position.get().y + offset.y;
 
         // Generate contacts
-        final ArrayList<Box> boxes = quakeGetCollidingBoxes(entity, offset);
-        final double stepHeight = entity.getStepHeight();
+        final ArrayList<AABB> boxes = quakeGetCollidingBoxes(entity, offset);
+        final double stepHeight = entity.maxUpStep();
 
         AtomicReference<Double> desiredStep = new AtomicReference<Double>(stepHeight);
-        for(Vec3d step : STEPS) {
+        for(Vec3 step : STEPS) {
             // Do discrete collision checks. Minecraft should
             // check for us anyways lol.
             position.set(position.get().add(offset.multiply(step)));
-            for(Box shape: boxes) {
-                localBox.min = new Vec3d(shape.minX, shape.minY, shape.minZ);
-                localBox.max = new Vec3d(shape.maxX, shape.maxY, shape.maxZ);
+            for(AABB shape : boxes) {
+                localBox.min = new Vec3(shape.minX, shape.minY, shape.minZ);
+                localBox.max = new Vec3(shape.maxX, shape.maxY, shape.maxZ);
 
                 generateDiscreteContact(
                     localBox,
@@ -307,9 +314,9 @@ public class QuakeCollider {
                         // Case 2: colliding with AABB
                         // v -= min(dot(v, n), 0.0) * n
                         // p += mtv + n*1e-6
-                        final Vec3d normal = discrete.normal.multiply(step);
+                        final Vec3 normal = discrete.normal.multiply(step);
                         desiredStep.set(0.0);
-                        position.set(position.get().add(discrete.mtv).add(normal.multiply(1e-6)));
+                        position.set(position.get().add(discrete.mtv).add(normal.scale(1e-6)));
                         velocity.set(projectPlane(velocity.get(), normal));
                     }
                 }
@@ -325,7 +332,7 @@ public class QuakeCollider {
 
         // Finalize state
         entity.setOnGround(prevY < position.get().y);
-        entity.setVelocity(velocity.get());
-        entity.setPosition(position.get().add(0.0, -halfSize.y, 0.0));
+        entity.setDeltaMovement(velocity.get());
+        entity.setPos(position.get().add(0.0, -halfSize.y, 0.0));
     }
 }

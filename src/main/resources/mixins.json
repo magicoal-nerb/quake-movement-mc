@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.quake.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "QuakeCharacterRenderer",
+    "QuakeClientCamera",
+    "QuakeClientEntity",
+    "QuakeEntityPosition",
+    "QuakePlayerTicker"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
